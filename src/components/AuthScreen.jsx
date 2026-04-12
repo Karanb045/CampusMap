@@ -85,7 +85,9 @@ export default function AuthScreen({ onSuccess, onGuest }) {
         setErrorMsg('No account found with this email.');
         break;
       case 'auth/wrong-password':
-        setErrorMsg('Incorrect password.');
+      case 'auth/invalid-credential':
+      case 'auth/invalid-login-credentials':
+        setErrorMsg('Incorrect password or email.');
         break;
       case 'auth/email-already-in-use':
         setErrorMsg('An account with this email already exists.');
@@ -122,15 +124,17 @@ export default function AuthScreen({ onSuccess, onGuest }) {
   const clearError = () => setErrorMsg('');
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <main id="main" className="min-h-screen bg-slate-50 flex flex-col overflow-y-auto">
       {/* Hero Section */}
       <div className="bg-[#1B3A6B] px-4 py-8 relative overflow-hidden">
         <div className="max-w-md mx-auto text-center">
-          {/* White Square Logo */}
-          <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center mb-4">
-            <svg className="w-8 h-8 text-[#1B3A6B]" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
-            </svg>
+          {/* DIT logo */}
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-white p-2 shadow-sm">
+            <img
+              src="/icons/dit_logo.jpg"
+              alt="DIT University logo"
+              className="h-full w-full object-contain object-center"
+            />
           </div>
           
           {/* App Title */}
@@ -141,7 +145,7 @@ export default function AuthScreen({ onSuccess, onGuest }) {
 
       {/* White Card Section */}
       <div className="flex-1 bg-white">
-        <div className="max-w-md mx-auto p-6">
+        <div className="max-w-md mx-auto flex flex-col px-6 py-6 pb-8">
           {/* Tab Switcher */}
           <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
             <button
@@ -285,13 +289,13 @@ export default function AuthScreen({ onSuccess, onGuest }) {
           </div>
 
           {/* Guest Mode */}
-          <div className="mt-6 text-center">
+          <div className="mt-6 border-t border-gray-200 pt-4 text-center">
             <p className="text-gray-600 text-sm">
               Browse without account · 
               <button
                 type="button"
                 onClick={onGuest}
-                className="text-[#1B3A6B] font-semibold hover:underline ml-1"
+                className="ml-1 font-semibold text-[#1B3A6B] hover:underline"
               >
                 Continue as guest
               </button>
@@ -299,6 +303,6 @@ export default function AuthScreen({ onSuccess, onGuest }) {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

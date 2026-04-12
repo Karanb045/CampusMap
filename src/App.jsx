@@ -501,7 +501,7 @@ export default function App() {
   );
 
   return (
-    <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: '#f0f4f8' }}>
+    <main id="main" style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: '#f0f4f8' }}>
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -1045,6 +1045,6 @@ export default function App() {
         </>
       )}
 
-    </div>
+    </main>
   );
 }
