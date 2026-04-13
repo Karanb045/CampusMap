@@ -1,4 +1,3 @@
-// d:\project\ProjectSE\src\components\SearchBar.jsx
 import { useEffect, useRef, useState } from 'react';
 import { search as runSearch } from '../services/searchService.js';
 

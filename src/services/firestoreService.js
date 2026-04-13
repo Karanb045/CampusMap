@@ -1,14 +1,3 @@
-// src/services/firestoreService.js
-// FIXED:
-//  1. updateBuilding — removed broken editableBy permission check that silently
-//     blocked all saves. Auth is handled by Firestore Security Rules, not here.
-//  2. addFloor — fixed signature from (data) to (floorId, data) to match
-//     how AdminPage calls it: addFloor('chanakya_F1', { ... })
-//  3. addAdmin — fixed signature from (email, name, role) to ({ email, name, role })
-//     to match how AdminPage calls it: addAdmin({ email, name, role })
-//  4. Removed editStaticBuilding — no longer needed, all buildings are Firestore docs
-//  5. logAudit — no longer calls saveAudit separately, writes directly
-
 import {
   addDoc,
   collection,
@@ -57,11 +46,9 @@ export async function getFloorsForBuilding(buildingId) {
   const q    = query(floorsCol, where('buildingId', '==', buildingId));
   const snap = await getDocs(q);
   const floors = snapshotToArray(snap);
-  // Sort by floorNumber in JS — avoids needing a Firestore composite index
   return floors.sort((a, b) => (a.floorNumber || 0) - (b.floorNumber || 0));
 }
 
-// FIX: signature is (floorId, data) — AdminPage calls addFloor('chanakya_F1', { ... })
 export async function addFloor(floorId, data) {
   const payload = {
     ...data,
@@ -94,9 +81,6 @@ export async function addBuilding(data) {
   return res.id;
 }
 
-// FIX: removed broken editableBy / userRole permission check.
-// All buildings in Firestore are editable by admins.
-// Permission is enforced by Firestore Security Rules, not by client code.
 export async function updateBuilding(buildingId, updates) {
   const ref = doc(db, 'buildings', buildingId);
   await updateDoc(ref, {
@@ -150,8 +134,6 @@ export async function getAdmins() {
   return snap.docs.map((d) => ({ email: d.id, ...d.data() }));
 }
 
-// FIX: signature is ({ email, name, role }) — AdminPage calls addAdmin({ email, name, role })
-// Old signature was (email, name, role) which meant name and role were always undefined
 export async function addAdmin({ email, name, role }) {
   await setDoc(doc(db, 'admins', email), {
     name,

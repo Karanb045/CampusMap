@@ -1,4 +1,3 @@
-// d:\project\ProjectSE\src\components\FloorPlanViewer.jsx
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch';
 

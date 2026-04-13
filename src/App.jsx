@@ -1,8 +1,3 @@
-// src/App.jsx
-// CHANGED: Removed ditBuildings.json import and static merge.
-//          Firestore is now the ONLY source of truth for building data.
-//          subscribeToBuildings callback now passes Firestore data directly.
-
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import useAuth from './hooks/useAuth';
 import useMapStore from './hooks/useMapStore';
@@ -214,15 +209,11 @@ export default function App() {
     return () => document.removeEventListener('mousedown', fn);
   }, []);
 
-  // CHANGED: subscribeToBuildings now uses Firestore data directly.
-  // No JSON import, no static merge, no duplicates.
-  // Firestore is the single source of truth.
   useEffect(() => {
     let unsubB = null;
     let unsubR = null;
     try {
       unsubB = subscribeToBuildings(firestoreBuildings => {
-        // CHANGED: use firestoreBuildings directly — no JSON merge
         setBuildings(firestoreBuildings);
         useMapStore.setState({ buildings: firestoreBuildings });
       });
@@ -331,8 +322,6 @@ export default function App() {
     }
   }
 
-  // CHANGED: handleBuildingClick only receives { id } from CampusMap.
-  // It looks up the full building object from Firestore buildings array.
   function handleBuildingClick(props) {
     const building =
       buildings.find(b => b.id === props?.id) ??

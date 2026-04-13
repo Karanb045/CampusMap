@@ -1,4 +1,3 @@
-// d:\project\ProjectSE\src\components\SidePanel.jsx
 import useMapStore from '../store/mapStore.js';
 
 export default function SidePanel() {

@@ -1,4 +1,3 @@
-// src/components/BuildingManagement.jsx
 import { useState, useEffect } from 'react';
 import { getDocs, collection, doc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';

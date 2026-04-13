@@ -1,5 +1,3 @@
-// d:\project\ProjectSE\src\components\FilterChips.jsx
-
 const CATEGORIES = [
   { id: 'all', label: 'All' },
   { id: 'academic', label: 'Academic' },

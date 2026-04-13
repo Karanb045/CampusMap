@@ -1,4 +1,3 @@
-
 function parseRange(rangeStr) {
   const s = String(rangeStr || '').trim();
   if (!s || s.toLowerCase() === 'closed') return null;

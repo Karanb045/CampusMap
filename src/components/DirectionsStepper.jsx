@@ -1,8 +1,4 @@
-// d:\project\ProjectSE\src\components\DirectionsStepper.jsx
-
 import { useEffect, useMemo, useState } from 'react';
-
-
 
 function stepIcon(type, instruction) {
 

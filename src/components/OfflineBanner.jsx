@@ -1,4 +1,3 @@
-// d:\project\ProjectSE\src\components\OfflineBanner.jsx
 import { useEffect, useState } from 'react';
 
 export default function OfflineBanner() {

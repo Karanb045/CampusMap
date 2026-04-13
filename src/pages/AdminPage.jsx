@@ -1,18 +1,6 @@
-// src/pages/AdminPage.jsx
 // Image strategy: compress → base64 → stored directly in Firestore field.
 // No Firebase Storage, no external services, works on free Spark plan.
 // Max compressed size ≈ 200KB base64 (well under 1MB Firestore doc limit).
-//
-// FIXES APPLIED:
-//  1. openFloorMgr — auto-increments floorNumber so new floors never
-//     overwrite the same Firestore doc (_F0 collision).
-//  2. saveFloor — uses editFloor.id when editing (not re-derived from
-//     floorNumber), adds collision guard for new floors, resets form
-//     to next auto-incremented number after save.
-//  3. Pin <Btn> — re-fetches fresh floor data before opening pin tool
-//     so planImageUrl is always current.
-//  4. <FloorPlanPinTool> — now passes floorPlanUrl={pinTool.floor?.planImageUrl}
-//     so the image actually renders in the pin tool.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { signOut } from 'firebase/auth';
@@ -119,7 +107,6 @@ const EMPTY_FLOOR = {
   entryPoints: '', corridorWaypoints: '',
 };
 
-// ─── Primitives ───────────────────────────────────────────────────────────────
 
 function Pill({ children, color = 'slate' }) {
   const map = {

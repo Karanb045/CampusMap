@@ -1,6 +1,4 @@
-// d:\project\ProjectSE\src\components\IndoorPathView.jsx
 import { useMemo } from 'react';
-import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch';
 import FloorPlanViewer from './FloorPlanViewer';
 
 function resolveFloorLabel(floor) {

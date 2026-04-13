@@ -1,25 +1,8 @@
-// scripts/seedFirestore.js
-//
-// Merges your existing seed logic with fixes:
-//   1. Reads ditBuildings.json (not .geojson)
-//   2. Uses polygon centroid for accurate lat/lng (your polygonCentroidLatLng)
-//   3. Seeds floors for ALL 6 buildings (not just chanakya)
-//   4. Seeds sample rooms for Chanakya Floor 1 (your existing rooms)
-//   5. Uses writeDocIfMissing — never overwrites admin edits
-//
-// Usage:
-//   npm install firebase-admin
-//   node scripts/seedFirestore.js
-//
-// Auth (pick one):
-//   • Set FIREBASE_SERVICE_ACCOUNT env var to the JSON string of your service account key
-//   • OR place serviceAccount.json in the project root
 
 import * as admin from 'firebase-admin';
 import fs from 'fs';
 import path from 'path';
 
-// ─── Service account loader (your pattern) ────────────────────────────────────
 function loadServiceAccount() {
   const env = process.env.FIREBASE_SERVICE_ACCOUNT;
   if (env) return JSON.parse(env);
@@ -35,7 +18,6 @@ function loadServiceAccount() {
   );
 }
 
-// ─── Firestore helper: skip if doc already exists ────────────────────────────
 async function writeDocIfMissing(db, colName, docId, data) {
   const ref = db.collection(colName).doc(docId);
   const snap = await ref.get();
@@ -44,7 +26,6 @@ async function writeDocIfMissing(db, colName, docId, data) {
   return { written: true, skipped: false, id: docId };
 }
 
-// ─── Polygon centroid (your accurate implementation) ─────────────────────────
 function polygonCentroidLatLng(feature) {
   const ring = feature?.geometry?.coordinates?.[0];
   if (!Array.isArray(ring) || ring.length === 0) return [30.3990, 78.0755];
@@ -60,8 +41,6 @@ function polygonCentroidLatLng(feature) {
   return [sumLat / n, sumLng / n];
 }
 
-// ─── Load buildings from ditBuildings.json ────────────────────────────────────
-// FIX: file is .json not .geojson
 function loadBuildingsFromJSON() {
   const jsonPath = path.resolve(process.cwd(), 'src', 'data', 'ditBuildings.json');
   const raw = fs.readFileSync(jsonPath, 'utf8');
@@ -86,9 +65,7 @@ function loadBuildingsFromJSON() {
   });
 }
 
-// ─── Floor definitions for all 6 buildings ───────────────────────────────────
-// Format: buildingId → array of floor defs
-// FIX: your seed only did chanakya. All 6 buildings need floors.
+// ─── Floor definitions for all buildings ───────────────────────────────────
 function getFloorDefs() {
   const make = (buildingId, totalFloors, labels) =>
     Array.from({ length: totalFloors + 1 }, (_, i) => ({
@@ -104,7 +81,6 @@ function getFloorDefs() {
     }));
 
   return [
-    // chanakya — 4 floors above ground (F0–F4)
     ...make('chanakya', 4, {
       0: 'Ground Floor',
       1: 'Floor 1',
@@ -112,35 +88,30 @@ function getFloorDefs() {
       3: 'Floor 3',
       4: 'Floor 4',
     }),
-    // vedanta — 3 floors (F0–F3)
     ...make('vedanta', 3, {
       0: 'Ground Floor',
       1: 'Floor 1',
       2: 'Floor 2',
       3: 'Floor 3',
     }),
-    // civil — 3 floors (F0–F3)
     ...make('civil', 3, {
       0: 'Ground Floor',
       1: 'Floor 1',
       2: 'Floor 2',
       3: 'Floor 3',
     }),
-    // vivekananda — 3 floors (F0–F3)
     ...make('vivekananda', 3, {
       0: 'Ground Floor',
       1: 'Floor 1',
       2: 'Floor 2',
       3: 'Floor 3',
     }),
-    // boys_hostel — 3 floors (F0–F3)
     ...make('boys_hostel', 3, {
       0: 'Ground Floor',
       1: 'Floor 1',
       2: 'Floor 2',
       3: 'Floor 3',
     }),
-    // girls_hostel — 3 floors (F0–F3)
     ...make('girls_hostel', 3, {
       0: 'Ground Floor',
       1: 'Floor 1',
@@ -150,7 +121,6 @@ function getFloorDefs() {
   ];
 }
 
-// ─── Sample rooms for Chanakya Floor 1 (your existing rooms, unchanged) ──────
 function getChanakhyaF1Rooms() {
   const hours = {
     weekday: '8:00-18:00',
@@ -170,7 +140,6 @@ function getChanakhyaF1Rooms() {
     hours,
   };
 
-  // Shared outdoor steps to Chanakya Floor 1
   const outdoorSteps = [
     {
       step: 1, type: 'outdoor',

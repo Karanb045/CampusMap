@@ -1,16 +1,3 @@
-// src/data/campusGraph.js
-// Outdoor routing graph for DIT University campus.
-//
-// Node IDs for buildings MUST match Firestore document IDs exactly:
-//   vedanta, chanakya, civil, vivekananda, boys_hostel, girls_hostel
-//
-// Junction nodes are routing waypoints (paths, roads, open areas).
-// Weights are approximate walking distances in metres.
-//
-// To add a new building added via AdminPage:
-//   1. Add its node with [lat, lng] matching its Firestore lat/lng
-//   2. Connect it to the nearest junction node with an estimated distance
-
 const campusGraph = {
   nodes: {
     // ── Entry points & path junctions ────────────────────────────────────────

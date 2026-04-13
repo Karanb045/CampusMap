@@ -1,5 +1,3 @@
-// d:\project\ProjectSE\src\services\searchService.js
-
 export function buildSearchIndex(rooms = [], buildings = []) {
   const buildingById = new Map(
     (buildings || []).map((b) => [b.id, b])

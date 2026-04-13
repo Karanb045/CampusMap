@@ -1,4 +1,3 @@
-// d:\project\ProjectSE\src\components\DetailPanel.jsx
 import FloorPlanViewer from './FloorPlanViewer';
 import { getLiveStatus } from '../utils/statusHelper.js';
 
@@ -13,7 +12,6 @@ function categoryStyles(category) {
 }
 
 function statusStyles(colour) {
-  // WCAG: use dark primary teal (#1D9E75) with white text on white surfaces.
   if (colour === 'green') return 'bg-[#1D9E75] text-white border-[#1D9E75]';
   if (colour === 'amber') return 'bg-amber-50 text-amber-800 border-amber-200';
   return 'bg-rose-50 text-rose-700 border-rose-200';

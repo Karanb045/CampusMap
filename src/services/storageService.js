@@ -1,6 +1,3 @@
-// d:\project\ProjectSE\src\services\storageService.js
-// Note: Using base64 storage in Firestore instead of Firebase Storage (free plan limitation)
-
 // Convert file to base64
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {

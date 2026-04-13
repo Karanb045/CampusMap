@@ -1,4 +1,3 @@
-// d:\project\ProjectSE\src\store\mapStore.js
 import { create } from 'zustand';
 
 const useMapStore = create((set, get) => ({

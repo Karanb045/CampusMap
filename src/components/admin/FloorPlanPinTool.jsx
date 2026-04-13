@@ -1,14 +1,3 @@
-// src/components/admin/FloorPlanPinTool.jsx
-// FIXED:
-//  1. floorPlanUrl now derived from `floor.planImageUrl` if not passed directly
-//     — AdminPage was passing floor={...} but never passing floorPlanUrl, so
-//       the image was always blank and clicks did nothing.
-//  2. onSaveRoomPosition is handled internally via updateRoom when not provided
-//     — AdminPage never passed onSaveRoomPosition, so pins were lost on click.
-//     Now the component saves to Firestore itself using updateRoom if no external
-//     handler is given. This makes it self-contained regardless of how it's called.
-//  3. Rooms list now shows a placeholder when no rooms exist for this floor.
-
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { updateRoom } from '../../services/firestoreService';
 
@@ -43,12 +32,10 @@ export default function FloorPlanPinTool({
   floor,
   floorId,
   buildingId,
-  // Optional external handlers — if omitted, component saves to Firestore itself
   onSaveRoomPosition,
   onSaveFloorMetadata,
   onSave,       // called after any successful save (e.g. to close the modal)
 }) {
-  // FIXED: derive the image URL from floor.planImageUrl when prop not passed
   const floorPlanUrl = floorPlanUrlProp || floor?.planImageUrl || '';
 
   const [mode,           setMode]           = useState(MODES.ROOMS);

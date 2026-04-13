@@ -1,4 +1,3 @@
-// src/services/firebase.js
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';

@@ -1,9 +1,8 @@
-// d:\project\ProjectSE\src\components\MapView.jsx
 import { MapContainer, TileLayer } from 'react-leaflet';
 import { useMemo } from 'react';
 
 export default function MapView() {
-  const center = useMemo(() => [30.3969, 78.0743], []); // Dehradun approx (placeholder)
+  const center = useMemo(() => [30.3969, 78.0743], []);
 
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">

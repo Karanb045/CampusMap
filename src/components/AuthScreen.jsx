@@ -124,7 +124,7 @@ export default function AuthScreen({ onSuccess, onGuest }) {
   const clearError = () => setErrorMsg('');
 
   return (
-    <main id="main" className="min-h-screen bg-slate-50 flex flex-col overflow-y-auto">
+    <main id="main" className="min-h-screen bg-slate-50 flex flex-col">
       {/* Hero Section */}
       <div className="bg-[#1B3A6B] px-4 py-8 relative overflow-hidden">
         <div className="max-w-md mx-auto text-center">
@@ -145,7 +145,7 @@ export default function AuthScreen({ onSuccess, onGuest }) {
 
       {/* White Card Section */}
       <div className="flex-1 bg-white">
-        <div className="max-w-md mx-auto flex flex-col px-6 py-6 pb-8">
+        <div className="max-w-md mx-auto p-6">
           {/* Tab Switcher */}
           <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
             <button
@@ -289,13 +289,13 @@ export default function AuthScreen({ onSuccess, onGuest }) {
           </div>
 
           {/* Guest Mode */}
-          <div className="mt-6 border-t border-gray-200 pt-4 text-center">
+          <div className="mt-6 text-center">
             <p className="text-gray-600 text-sm">
               Browse without account · 
               <button
                 type="button"
                 onClick={onGuest}
-                className="ml-1 font-semibold text-[#1B3A6B] hover:underline"
+                className="text-[#1B3A6B] font-semibold hover:underline ml-1"
               >
                 Continue as guest
               </button>

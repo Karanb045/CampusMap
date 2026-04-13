@@ -1,4 +1,3 @@
-// d:\project\ProjectSE\src\components\Header.jsx
 export default function Header() {
   return (
     <header className="border-b border-slate-200 bg-white">

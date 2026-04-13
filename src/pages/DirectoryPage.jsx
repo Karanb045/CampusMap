@@ -1,4 +1,3 @@
-// d:\project\ProjectSE\src\pages\DirectoryPage.jsx
 import { useEffect, useState } from 'react';
 import { subscribeToBuildings, subscribeToRooms } from '../services/firestoreService';
 

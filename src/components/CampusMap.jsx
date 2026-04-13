@@ -73,12 +73,10 @@ export default function CampusMap({
 }) {
   const mapRef              = useRef(null);
   const [mapReady, setMapReady] = useState(false);
-  // FIX: locationError state so we can show feedback without calling undefined showToast
   const [locationError, setLocationError] = useState('');
 
   // Global label click handler for inline HTML onclick
   useEffect(() => {
-    // CHANGED: pass only { id } so App.jsx looks up full building from Firestore
     window.labelClick = (id) => {
       if (typeof onBuildingClick === 'function') {
         onBuildingClick({ id });
@@ -253,8 +251,6 @@ export default function CampusMap({
             onmouseover="this.style.background='#1B3A6B';this.style.color='white';"
             onmouseout="this.style.background='rgba(255,255,255,0.95)';this.style.color='#1B3A6B';"
           >${name}</div>`,
-          // iconSize null = Leaflet does not clip — content determines size
-          // iconAnchor [0,0] because we use translateX(-50%) in CSS to center
           iconSize:   null,
           iconAnchor: [0, 10],
         });
@@ -276,7 +272,6 @@ export default function CampusMap({
     });
   }, [onBuildingClick]);
 
-  // FIX: safe routePath — guard against null/undefined from useRoute
   const safeRoutePath = Array.isArray(routePath) ? routePath : [];
   const filteredGeoJson = useMemo(() => {
     const features = Array.isArray(ditBuildings?.features) ? ditBuildings.features : [];
