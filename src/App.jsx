@@ -103,6 +103,7 @@ export default function App() {
   const [activeTab, setActiveTab]             = useState(0);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [toastMsg, setToastMsg]               = useState('');
+  const [showAllHomeBuildings, setShowAllHomeBuildings] = useState(false);
   const profileMenuRef                        = useRef(null);
 
   const {
@@ -771,12 +772,21 @@ export default function App() {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <span style={{ fontSize: '12px', fontWeight: '700', color: '#0f172a' }}>Buildings</span>
-                <span style={{ fontSize: '11px', color: '#1B3A6B', fontWeight: '600' }}>See all {buildings.length} →</span>
+                <button
+                  type="button"
+                  onClick={() => setShowAllHomeBuildings((v) => !v)}
+                  style={{
+                    fontSize: '11px', color: '#1B3A6B', fontWeight: '600',
+                    background: 'none', border: 'none', cursor: 'pointer', padding: 0
+                  }}
+                >
+                  {showAllHomeBuildings ? 'Show less' : `See all ${buildings.length} →`}
+                </button>
               </div>
 
               {buildings.length === 0
                 ? <EmptyBuildings />
-                : buildings.slice(0, 6).map(b => <BuildingCard key={b.id} building={b} />)
+                : (showAllHomeBuildings ? buildings : buildings.slice(0, 6)).map(b => <BuildingCard key={b.id} building={b} />)
               }
             </div>
           </div>
