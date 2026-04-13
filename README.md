@@ -11,7 +11,7 @@
 [![PWA](https://img.shields.io/badge/PWA-Offline%20Ready-5A0FC8?style=flat-square&logo=pwa)](https://web.dev/progressive-web-apps/)
 [![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?style=flat-square&logo=vercel)](https://vercel.com/karanb045s-projects/campus-map)
 
-[🗺️ Live Demo](https://campus-map-ivory.vercel.app/)
+[🗺️ Live Demo](https://campus-map-eta.vercel.app/)
 
 </div>
 
@@ -270,7 +270,7 @@ Visible only when your email exists in Firestore `/admins` collection.
 ## 🚢 Deployment on Vercel
 
 This project is deployed on **Vercel** at:
-👉 [https://campus-map-ivory.vercel.app/](https://campus-map-ivory.vercel.app/)
+👉 [https://campus-map-eta.vercel.app/](https://campus-map-eta.vercel.app/)
 
 ### Deploy Your Own Fork
 
