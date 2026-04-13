@@ -36,9 +36,27 @@ function TypeBadge({ room }) {
   );
 }
 
+function normalizeCoord(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return null;
+  if (n >= 0 && n <= 1) return n;
+  if (n > 1 && n <= 100) return n / 100;
+  return null;
+}
+
+function normalizePoint(point) {
+  if (!point || typeof point !== 'object') return null;
+  const x = normalizeCoord(point.x ?? point.planX ?? point.px);
+  const y = normalizeCoord(point.y ?? point.planY ?? point.py);
+  if (x === null || y === null) return null;
+  return { ...point, x, y };
+}
+
 export default function FloorPlanViewer({
   floorPlanUrl,
   rooms,
+  entryPoints = [],
+  corridorWaypoints = [],
   highlightedRoomId,
   onRoomDotClick,
   showRoomsList = true,
@@ -77,6 +95,16 @@ export default function FloorPlanViewer({
   };
 
   const safeRooms = Array.isArray(rooms) ? rooms : [];
+  const safeEntryPoints = Array.isArray(entryPoints) ? entryPoints : [];
+  const safeWaypoints = Array.isArray(corridorWaypoints) ? corridorWaypoints : [];
+  const normalizedEntryPoints = useMemo(
+    () => safeEntryPoints.map(normalizePoint).filter(Boolean),
+    [safeEntryPoints]
+  );
+  const normalizedWaypoints = useMemo(
+    () => safeWaypoints.map(normalizePoint).filter(Boolean),
+    [safeWaypoints]
+  );
   const imageContainerRef = useRef(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [naturalSize, setNaturalSize] = useState({ width: 0, height: 0 });
@@ -208,6 +236,54 @@ export default function FloorPlanViewer({
                       </div>
                     );
                   })}
+
+                {normalizedEntryPoints
+                  .map((p) => {
+                    const isExit = /exit/i.test(String(p?.label || p?.id || ''));
+                    return (
+                      <div
+                        key={`entry-${p.id || `${p.x}-${p.y}`}`}
+                        className="absolute grid place-items-center rounded-md border-2 border-white text-[9px] font-extrabold text-white"
+                        style={{
+                          left: fillHeight && fitRect
+                            ? `${fitRect.left + p.x * fitRect.width}px`
+                            : `${p.x * 100}%`,
+                          top: fillHeight && fitRect
+                            ? `${fitRect.top + p.y * fitRect.height}px`
+                            : `${p.y * 100}%`,
+                          transform: 'translate(-50%, -50%)',
+                          width: '20px',
+                          height: '20px',
+                          background: isExit ? '#D85A30' : '#059669',
+                          boxShadow: '0 0 0 2px rgba(255,255,255,0.25)'
+                        }}
+                        title={p.label || p.id || (isExit ? 'Exit' : 'Entry')}
+                      >
+                        {isExit ? 'X' : 'E'}
+                      </div>
+                    );
+                  })}
+
+                {normalizedWaypoints
+                  .map((p) => (
+                    <div
+                      key={`waypoint-${p.id || `${p.x}-${p.y}`}`}
+                      className="absolute rounded-full border border-white"
+                      style={{
+                        left: fillHeight && fitRect
+                          ? `${fitRect.left + p.x * fitRect.width}px`
+                          : `${p.x * 100}%`,
+                        top: fillHeight && fitRect
+                          ? `${fitRect.top + p.y * fitRect.height}px`
+                          : `${p.y * 100}%`,
+                        transform: 'translate(-50%, -50%)',
+                        width: '10px',
+                        height: '10px',
+                        background: '#F59E0B'
+                      }}
+                      title={p.id || 'Waypoint'}
+                    />
+                  ))}
               </div>
             </TransformComponent>
           </TransformWrapper>

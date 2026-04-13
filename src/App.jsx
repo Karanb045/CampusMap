@@ -1073,7 +1073,7 @@ export default function App() {
         <>
           <div style={{ position: 'fixed', inset: 0, zIndex: 750, background: 'transparent' }} onClick={handleIndoorDone} />
           <div style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 760, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
-            <div style={{ width: '100%', maxWidth: '920px', height: '86vh', padding: '0 14px 14px', pointerEvents: 'auto' }}>
+            <div style={{ width: '100%', maxWidth: '920px', height: '74vh', padding: '0 10px 10px', pointerEvents: 'auto' }}>
               <div style={{ height: '100%', overflow: 'hidden', borderRadius: '24px 24px 0 0', border: '1px solid #dbe4ef', background: 'white', boxShadow: '0 -6px 30px rgba(0,0,0,0.18)' }}>
                 <IndoorPathView
                   building={selectedBuilding}

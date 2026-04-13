@@ -110,6 +110,8 @@ export default function IndoorPathView({
   const { floorNumber, buildingName } = resolveFloorLabel(resolvedFloor);
   const planUrl = floorPlanUrl || resolvedFloor.planImageData || resolvedFloor.planImageUrl || resolvedFloor.floorPlanUrl || '';
   const safeRooms = Array.isArray(rooms) ? rooms : [];
+  const safeEntryPoints = Array.isArray(resolvedFloor?.entryPoints) ? resolvedFloor.entryPoints : [];
+  const safeWaypoints = Array.isArray(resolvedFloor?.corridorWaypoints) ? resolvedFloor.corridorWaypoints : [];
 
   const pathData = useMemo(
     () => computePathPoints(resolvedFloor, resolvedTargetRoom, entryPointId),
@@ -121,7 +123,7 @@ export default function IndoorPathView({
   const distanceText = pathData ? `~${pathData.metres} metres` : '';
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-slate-50">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-slate-50">
       <style>{`
         @keyframes indoorTargetPulse {
           0% { r: 3; opacity: 0.9; }
@@ -130,7 +132,7 @@ export default function IndoorPathView({
         }
       `}</style>
 
-      <div className="mb-2 flex items-center justify-between gap-2 text-xs">
+      <div className="mb-2 flex items-center justify-between gap-2 px-2 pt-1 text-xs">
         <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-800">
           <span className="h-2 w-2 rounded-full bg-emerald-500" />
           <span>
@@ -138,7 +140,7 @@ export default function IndoorPathView({
             {(buildingName || building?.name) ? ` — ${buildingName || building?.name}` : ''}
           </span>
         </div>
-        <div className="truncate text-[11px] font-semibold text-slate-600">
+        <div className="mr-1 max-w-[42%] truncate text-[11px] font-semibold text-slate-600">
           → {roomName}
         </div>
       </div>
@@ -161,16 +163,18 @@ export default function IndoorPathView({
         </div>
       )}
 
-      <div className="relative w-full flex-1 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+      <div className="relative w-full min-h-0 flex-1 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
         {planUrl ? (
           <FloorPlanViewer
             floorPlanUrl={planUrl}
             rooms={safeRooms}
+            entryPoints={safeEntryPoints}
+            corridorWaypoints={safeWaypoints}
             highlightedRoomId={resolvedTargetRoom?.id ?? null}
             onRoomDotClick={() => {}}
             showRoomsList={false}
-            minScale={0.45}
-            initialScale={0.68}
+            minScale={0.6}
+            initialScale={0.9}
             forceCenterOnInit={true}
             disablePan={true}
             fillHeight={true}

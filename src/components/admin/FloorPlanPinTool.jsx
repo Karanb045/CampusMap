@@ -178,6 +178,26 @@ export default function FloorPlanPinTool({
     }
   }
 
+  function removeEntryPoint(id) {
+    setEntryPoints((prev) => prev.filter((p) => p.id !== id));
+    setToast('Entry point removed');
+  }
+
+  function removeWaypoint(id) {
+    setCorridorWps((prev) => prev.filter((p) => p.id !== id));
+    setToast('Waypoint removed');
+  }
+
+  function clearAllEntries() {
+    setEntryPoints([]);
+    setToast('All entry points cleared');
+  }
+
+  function clearAllWaypoints() {
+    setCorridorWps([]);
+    setToast('All waypoints cleared');
+  }
+
   const placedRooms = roomsWithLocalPins.filter(
     r => typeof r.planX === 'number' && typeof r.planY === 'number'
   );
@@ -332,7 +352,19 @@ export default function FloorPlanPinTool({
 
       {/* ── Save metadata button for entries/waypoints ── */}
       {(mode === MODES.ENTRIES || mode === MODES.WAYPOINTS) && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
+          <button
+            type="button"
+            disabled={saving || (mode === MODES.ENTRIES ? entryPoints.length === 0 : corridorWps.length === 0)}
+            onClick={mode === MODES.ENTRIES ? clearAllEntries : clearAllWaypoints}
+            style={{
+              padding: '8px 14px', borderRadius: '10px', fontSize: '12px',
+              fontWeight: '700', border: `1.5px solid ${C.border}`,
+              cursor: saving ? 'wait' : 'pointer', background: '#fff',
+              color: C.textMid, fontFamily: 'inherit', opacity: saving ? 0.6 : 1,
+            }}>
+            {mode === MODES.ENTRIES ? 'Clear All Entries' : 'Clear All Waypoints'}
+          </button>
           <button
             type="button"
             disabled={saving}
@@ -345,6 +377,45 @@ export default function FloorPlanPinTool({
             }}>
             {saving ? 'Saving…' : mode === MODES.ENTRIES ? '💾 Save Entry Points' : '💾 Save Waypoints'}
           </button>
+        </div>
+      )}
+
+      {(mode === MODES.ENTRIES || mode === MODES.WAYPOINTS) && (
+        <div style={{ borderRadius: '12px', border: `1px solid ${C.border}`, background: 'white', overflow: 'hidden' }}>
+          <div style={{ padding: '8px 14px', borderBottom: `1px solid ${C.border}`, fontSize: '11px', fontWeight: '800', color: C.textDim, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            {mode === MODES.ENTRIES ? `Entry Points (${entryPoints.length})` : `Waypoints (${corridorWps.length})`}
+          </div>
+
+          {(mode === MODES.ENTRIES ? entryPoints : corridorWps).length === 0 ? (
+            <div style={{ padding: '12px 14px', fontSize: '12px', color: C.textDim }}>
+              {mode === MODES.ENTRIES ? 'No entry points yet. Click on map to add.' : 'No waypoints yet. Click on map to add.'}
+            </div>
+          ) : (
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0, maxHeight: '150px', overflowY: 'auto' }}>
+              {(mode === MODES.ENTRIES ? entryPoints : corridorWps).map((p, idx) => (
+                <li key={p.id || `${p.x}-${p.y}-${idx}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '8px 14px', borderBottom: `1px solid ${C.border}` }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: '12px', fontWeight: '700', color: C.text }}>
+                      {mode === MODES.ENTRIES ? (p.label || p.id || `Entry ${idx + 1}`) : (p.id || `Waypoint ${idx + 1}`)}
+                    </div>
+                    <div style={{ fontSize: '11px', color: C.textDim }}>
+                      x: {Number(p.x).toFixed(3)} · y: {Number(p.y).toFixed(3)}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => mode === MODES.ENTRIES ? removeEntryPoint(p.id) : removeWaypoint(p.id)}
+                    style={{
+                      padding: '5px 10px', borderRadius: '8px', border: `1px solid ${C.border}`,
+                      background: '#fff', color: '#b91c1c', fontSize: '11px', fontWeight: '700',
+                      cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+                    }}>
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 
