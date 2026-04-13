@@ -205,7 +205,13 @@ function RoomView({ buildingName, room, onBack, onNavigate }) {
   const floorNumber =
     typeof room?.floorNumber === 'number' ? room.floorNumber : typeof room?.floor === 'number' ? room.floor : null;
 
-  const live = getLiveStatus(room?.hours);
+  const live = getLiveStatus(
+    room?.hours || {
+      weekday: room?.hoursWeekday,
+      saturday: room?.hoursSaturday,
+      sunday: room?.hoursSunday
+    }
+  );
   const type = typeLabel(room);
   const equipment = Array.isArray(room?.equipment) ? room.equipment.filter(Boolean) : [];
 

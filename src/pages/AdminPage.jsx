@@ -109,8 +109,8 @@ const EMPTY_BUILDING = {
 const EMPTY_ROOM = {
   buildingId:'', floorId:'', roomNumber:'', name:'',
   type:'classroom', department:'',
-  hoursWeekday:'', hoursSaturday:'',
-  hoursSunday:'', searchTags:'', accessible:false, temporarilyClosed:false,
+  hoursWeekday:'09:00-17:00', hoursSaturday:'09:00-13:00',
+  hoursSunday:'Closed', searchTags:'',
 };
 const EMPTY_FLOOR = {
   floorNumber: 0, label: 'Ground Floor',
@@ -750,12 +750,29 @@ export default function AdminPage({ onBack }) {
 
   // ── Room CRUD ────────────────────────────────────────────────────────────────
   const openAddRoom  = ()=>{ setEditRoom(null); setRoomForm({...EMPTY_ROOM}); setRoomErrs({}); setRoomModal(true); };
-  const openEditRoom = r=>{ setEditRoom(r); setRoomForm({ buildingId:r.buildingId||'', floorId:r.floorId||'', roomNumber:r.roomNumber||r.number||'', name:r.name||'', type:r.type||'classroom', department:r.department||'', hoursWeekday:r.hoursWeekday||'', hoursSaturday:r.hoursSaturday||'', hoursSunday:r.hoursSunday||'', searchTags:r.searchTags||'', accessible:r.accessible||false, temporarilyClosed:r.temporarilyClosed||false }); setRoomErrs({}); setRoomModal(true); };
-  const valRoom = ()=>{ const e={}; if(!roomForm.buildingId)e.buildingId='Required'; if(!roomForm.roomNumber.trim())e.roomNumber='Required'; if(!roomForm.name.trim())e.name='Required'; setRoomErrs(e); return !Object.keys(e).length; };
+  const openEditRoom = r=>{ setEditRoom(r); setRoomForm({ buildingId:r.buildingId||'', floorId:r.floorId||'', roomNumber:r.roomNumber||r.number||'', name:r.name||'', type:r.type||'classroom', department:r.department||'', hoursWeekday:r.hoursWeekday||r.hours?.weekday||'09:00-17:00', hoursSaturday:r.hoursSaturday||r.hours?.saturday||'09:00-13:00', hoursSunday:r.hoursSunday||r.hours?.sunday||'Closed', searchTags:r.searchTags||'' }); setRoomErrs({}); setRoomModal(true); };
+  const isValid24hRange = (value) => /^(?:[01]\d|2[0-3]):[0-5]\d-(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(value || '').trim());
+  const valRoom = ()=>{
+    const e={};
+    if(!roomForm.buildingId)e.buildingId='Required';
+    if(!roomForm.roomNumber.trim())e.roomNumber='Required';
+    if(!roomForm.name.trim())e.name='Required';
+    const weekday = roomForm.hoursWeekday.trim();
+    const saturday = roomForm.hoursSaturday.trim();
+    const sunday = roomForm.hoursSunday.trim();
+    if (weekday && !isValid24hRange(weekday)) e.hoursWeekday='Use 24h format HH:MM-HH:MM';
+    if (saturday && !isValid24hRange(saturday)) e.hoursSaturday='Use 24h format HH:MM-HH:MM';
+    if (sunday && sunday.toLowerCase() !== 'closed' && !isValid24hRange(sunday)) e.hoursSunday='Use HH:MM-HH:MM or Closed';
+    setRoomErrs(e);
+    return !Object.keys(e).length;
+  };
   const saveRoom = async ()=>{
     if(!valRoom()) return; setSaving(true);
     try{
-      const data={ buildingId:roomForm.buildingId, floorId:roomForm.floorId, roomNumber:roomForm.roomNumber.trim(), name:roomForm.name.trim(), type:roomForm.type, department:roomForm.department.trim(), hoursWeekday:roomForm.hoursWeekday.trim(), hoursSaturday:roomForm.hoursSaturday.trim(), hoursSunday:roomForm.hoursSunday.trim(), searchTags:roomForm.searchTags.trim(), accessible:roomForm.accessible, temporarilyClosed:roomForm.temporarilyClosed };
+      const weekday = roomForm.hoursWeekday.trim() || '09:00-17:00';
+      const saturday = roomForm.hoursSaturday.trim() || '09:00-13:00';
+      const sunday = roomForm.hoursSunday.trim() || 'Closed';
+      const data={ buildingId:roomForm.buildingId, floorId:roomForm.floorId, roomNumber:roomForm.roomNumber.trim(), name:roomForm.name.trim(), type:roomForm.type, department:roomForm.department.trim(), hoursWeekday:weekday, hoursSaturday:saturday, hoursSunday:sunday, hours:{ weekday, saturday, sunday }, searchTags:roomForm.searchTags.trim() };
       if(editRoom){ await updateRoom(editRoom.id,data); await logAudit('update','room',editRoom.id); showToast('Room updated ✓'); }
       else{ const id=await addRoom(data); await logAudit('create','room',id); showToast('Room added ✓'); }
       setRoomModal(false);
@@ -1312,22 +1329,13 @@ export default function AdminPage({ onBack }) {
             </TSelect>
           </Field>
           <Field label="Department"><TInput value={roomForm.department} onChange={e=>setRoomForm(p=>({...p,department:e.target.value}))} placeholder="e.g. CSE"/></Field>
-          <Field label="Weekday Hours"><TInput value={roomForm.hoursWeekday} onChange={e=>setRoomForm(p=>({...p,hoursWeekday:e.target.value}))} placeholder="9am–5pm"/></Field>
-          <Field label="Saturday Hours"><TInput value={roomForm.hoursSaturday} onChange={e=>setRoomForm(p=>({...p,hoursSaturday:e.target.value}))} placeholder="9am–1pm"/></Field>
+          <Field label="Weekday Hours (24h)" error={roomErrs.hoursWeekday}><TInput value={roomForm.hoursWeekday} onChange={e=>setRoomForm(p=>({...p,hoursWeekday:e.target.value}))} placeholder="09:00-17:00"/></Field>
+          <Field label="Saturday Hours (24h)" error={roomErrs.hoursSaturday}><TInput value={roomForm.hoursSaturday} onChange={e=>setRoomForm(p=>({...p,hoursSaturday:e.target.value}))} placeholder="09:00-13:00"/></Field>
+          <Field label="Sunday Hours (24h or Closed)" error={roomErrs.hoursSunday}><TInput value={roomForm.hoursSunday} onChange={e=>setRoomForm(p=>({...p,hoursSunday:e.target.value}))} placeholder="Closed"/></Field>
           <div style={{ gridColumn:'1/-1' }}>
             <Field label="Search Tags (comma-separated)">
               <TInput value={roomForm.searchTags} onChange={e=>setRoomForm(p=>({...p,searchTags:e.target.value}))} placeholder="lab, computer, cse"/>
             </Field>
-          </div>
-          <div style={{ gridColumn:'1/-1', display:'flex', gap:'24px' }}>
-            <label style={{ display:'flex', alignItems:'center', gap:'8px', cursor:'pointer', fontSize:'13px', fontWeight:'600', color:C.textMid }}>
-              <input type="checkbox" checked={roomForm.accessible} onChange={e=>setRoomForm(p=>({...p,accessible:e.target.checked}))} style={{ width:'15px', height:'15px' }}/>
-              ♿ Accessible
-            </label>
-            <label style={{ display:'flex', alignItems:'center', gap:'8px', cursor:'pointer', fontSize:'13px', fontWeight:'600', color:C.textMid }}>
-              <input type="checkbox" checked={roomForm.temporarilyClosed} onChange={e=>setRoomForm(p=>({...p,temporarilyClosed:e.target.checked}))} style={{ width:'15px', height:'15px' }}/>
-              Temporarily Closed
-            </label>
           </div>
         </div>
         <HR/>
