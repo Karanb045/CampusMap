@@ -9,11 +9,13 @@ import ditBuildings from '../data/ditBuildings.json';
 const GEOJSON_BUILDING_IDS = new Set(
   (ditBuildings?.features ?? []).map(f => f?.properties?.id).filter(Boolean)
 );
+const HOSTEL_ONLY_IDS = new Set(['boys_hostel', 'girls_hostel']);
 
 const CATEGORY_COLORS = {
   academic: '#378ADD',
   admin:    '#7F77DD',
   amenity:  '#1D9E75',
+  cafeteria:'#BA7517',
   hostel:   '#BA7517',
   sports:   '#D85A30',
 };
@@ -57,6 +59,7 @@ const BuildingsGeoJSON = memo(function BuildingsGeoJSON({ data, style, onEachFea
 
 export default function CampusMap({
   pois        = [],
+  activeFilter = 'all',
   routePath   = [],   // FIX: default [] not null — was crashing at routePath.length
   userLocation = null,
   flyTarget    = null,
@@ -275,6 +278,18 @@ export default function CampusMap({
 
   // FIX: safe routePath — guard against null/undefined from useRoute
   const safeRoutePath = Array.isArray(routePath) ? routePath : [];
+  const filteredGeoJson = useMemo(() => {
+    const features = Array.isArray(ditBuildings?.features) ? ditBuildings.features : [];
+    const key = String(activeFilter || 'all').toLowerCase();
+    if (key === 'all') return ditBuildings;
+
+    let selected = features.filter((f) => String(f?.properties?.category || '').toLowerCase() === key);
+    if (key === 'hostel') {
+      selected = selected.filter((f) => HOSTEL_ONLY_IDS.has(f?.properties?.id));
+    }
+
+    return { ...ditBuildings, features: selected };
+  }, [activeFilter]);
 
   return (
     <div
@@ -325,9 +340,9 @@ export default function CampusMap({
         />
 
         {/* Building polygons — GeoJSON for outlines, Firestore for data */}
-        {ditBuildings && (
+        {filteredGeoJson && (
           <BuildingsGeoJSON
-            data={ditBuildings}
+            data={filteredGeoJson}
             style={buildingStyleFn}
             onEachFeature={onEachBuilding}
           />

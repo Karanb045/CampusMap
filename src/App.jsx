@@ -15,6 +15,7 @@ import IndoorPathView from './components/IndoorPathView.jsx';
 import OfflineBanner from './components/OfflineBanner.jsx';
 import DirectoryPage from './pages/DirectoryPage.jsx';
 import SearchBar from './components/SearchBar.jsx';
+import FilterChips from './components/FilterChips.jsx';
 import AuthScreen from './components/AuthScreen.jsx';
 import ditBuildings from './data/ditBuildings.json';
 import { buildSearchIndex, filterByCategory } from './services/searchService';
@@ -29,10 +30,11 @@ import {
 // Static JSON is used here only as a temporary fallback while Firestore sync is loading.
 
 const AdminPage = lazy(() => import('./pages/AdminPage.jsx'));
+const HOSTEL_ONLY_IDS = new Set(['boys_hostel', 'girls_hostel']);
 
 function getCategoryBg(category) {
   const map = {
-    academic: '#EEF2FF', admin: '#EEEDFE', amenity: '#F0FDF4',
+    academic: '#EEF2FF', admin: '#EEEDFE', amenity: '#F0FDF4', cafeteria: '#FFF7ED',
     hostel: '#FFF7ED', sports: '#FFF1F2', medical: '#FFF1F2',
     lab: '#EEF2FF', classroom: '#F0FDF4', office: '#FFF7ED',
   };
@@ -41,7 +43,7 @@ function getCategoryBg(category) {
 
 function getCategoryColor(category) {
   const map = {
-    academic: '#3730A3', admin: '#534AB7', amenity: '#15803d',
+    academic: '#3730A3', admin: '#534AB7', amenity: '#15803d', cafeteria: '#c2410c',
     hostel: '#c2410c', sports: '#BE123C', medical: '#BE123C',
     lab: '#3730A3', classroom: '#15803d', office: '#c2410c',
   };
@@ -161,7 +163,7 @@ export default function App() {
 
   const filteredPois = useMemo(() => {
     try {
-      return filterByCategory(
+      const basePois = filterByCategory(
         (buildings ?? [])
           .filter(b => typeof b.lat === 'number' && typeof b.lng === 'number')
           .map(b => ({
@@ -170,15 +172,32 @@ export default function App() {
           })),
         activeFilter
       );
+
+      if (String(activeFilter || '').toLowerCase() === 'hostel') {
+        return basePois.filter((p) => HOSTEL_ONLY_IDS.has(p.id));
+      }
+
+      return basePois;
     } catch { return []; }
+  }, [buildings, activeFilter]);
+
+  const filteredBuildings = useMemo(() => {
+    try {
+      const key = String(activeFilter || 'all').toLowerCase();
+      if (key === 'all') return buildings;
+
+      let list = buildings.filter((b) => String(b?.category || '').toLowerCase() === key);
+      if (key === 'hostel') {
+        list = list.filter((b) => HOSTEL_ONLY_IDS.has(b.id));
+      }
+      return list;
+    } catch {
+      return buildings;
+    }
   }, [buildings, activeFilter]);
 
   const totalFloors = useMemo(() =>
     buildings.reduce((s, b) => s + (b.totalFloors || 0), 0), [buildings]);
-
-  const medicalStat = buildings.some(b => b.category === 'medical')
-    ? '24/7'
-    : buildings.filter(b => b.category === 'amenity').length;
 
   useEffect(() => {
     const fn = () => setIsMobileView(window.innerWidth < 1024);
@@ -377,6 +396,10 @@ export default function App() {
   }
 
   function handleRoomSelect(room) { useMapStore.setState({ selectedRoom: room }); }
+
+  function handleFilterChange(categoryId) {
+    useMapStore.setState({ activeFilter: categoryId || 'all' });
+  }
 
   function handleGetDirections(room) {
     const target = room ?? selectedBuilding;
@@ -642,8 +665,7 @@ export default function App() {
               {[
                 { n: buildings.length, l: 'Buildings' },
                 { n: rooms.length,     l: 'Rooms'     },
-                { n: totalFloors,      l: 'Floors'    },
-                { n: medicalStat,      l: 'Medical'   }
+                { n: totalFloors,      l: 'Floors'    }
               ].map(s => (
                 <div key={s.l} style={{
                   background: '#f8fafc', borderRadius: '8px',
@@ -657,12 +679,16 @@ export default function App() {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <span style={{ fontSize: '11px', fontWeight: '700', color: '#0f172a' }}>Buildings</span>
-              <span style={{ fontSize: '10px', color: '#1B3A6B', fontWeight: '600' }}>All {buildings.length} →</span>
+              <span style={{ fontSize: '10px', color: '#1B3A6B', fontWeight: '600' }}>Showing {filteredBuildings.length}</span>
             </div>
 
-            {buildings.length === 0
+            <div style={{ marginBottom: '10px' }}>
+              <FilterChips activeCategory={activeFilter} onFilterChange={handleFilterChange} />
+            </div>
+
+            {filteredBuildings.length === 0
               ? <EmptyBuildings />
-              : buildings.map(building => (
+              : filteredBuildings.map(building => (
                   <div key={building.id} onClick={() => handleBuildingSidebarClick(building)} style={{
                     display: 'flex', alignItems: 'center', gap: '8px', padding: '10px',
                     borderRadius: '10px',
@@ -738,8 +764,7 @@ export default function App() {
                 {[
                   { n: buildings.length, l: 'Buildings' },
                   { n: rooms.length,     l: 'Rooms'     },
-                  { n: totalFloors,      l: 'Floors'    },
-                  { n: medicalStat,      l: 'Medical'   }
+                  { n: totalFloors,      l: 'Floors'    }
                 ].map(s => (
                   <div key={s.l} style={{
                     background: '#111827', borderRadius: '10px',
@@ -780,13 +805,17 @@ export default function App() {
                     background: 'none', border: 'none', cursor: 'pointer', padding: 0
                   }}
                 >
-                  {showAllHomeBuildings ? 'Show less' : `See all ${buildings.length} →`}
+                  {showAllHomeBuildings ? 'Show less' : `See all ${filteredBuildings.length} →`}
                 </button>
               </div>
 
-              {buildings.length === 0
+              <div style={{ marginBottom: '10px' }}>
+                <FilterChips activeCategory={activeFilter} onFilterChange={handleFilterChange} />
+              </div>
+
+              {filteredBuildings.length === 0
                 ? <EmptyBuildings />
-                : (showAllHomeBuildings ? buildings : buildings.slice(0, 6)).map(b => <BuildingCard key={b.id} building={b} />)
+                : (showAllHomeBuildings ? filteredBuildings : filteredBuildings.slice(0, 6)).map(b => <BuildingCard key={b.id} building={b} />)
               }
             </div>
           </div>
@@ -801,6 +830,7 @@ export default function App() {
               {shouldRenderMap && (
                 <CampusMap
                   pois={filteredPois}
+                  activeFilter={activeFilter}
                   routePath={routePath}
                   showRoute={false}
                   userLocation={userLocation}
@@ -840,6 +870,7 @@ export default function App() {
                 <SearchBar index={searchIndex} onResultSelect={handleSearchResultSelect} placeholder="Search buildings, rooms..." />
               </div>
             </div>
+
           </div>
 
           {/* DIRECTORY — mobile tab 2 */}
@@ -871,12 +902,11 @@ export default function App() {
                   <p style={{ color: '#64748b' }}>DIT University, Dehradun — Interactive Campus Navigation</p>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '16px', marginBottom: '32px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px', marginBottom: '32px' }}>
                   {[
                     { n: buildings.length, l: 'Buildings', e: '🏢' },
                     { n: rooms.length,     l: 'Rooms',     e: '🚪' },
-                    { n: totalFloors,      l: 'Floors',    e: '📐' },
-                    { n: medicalStat,      l: 'Medical',   e: '🏥' }
+                    { n: totalFloors,      l: 'Floors',    e: '📐' }
                   ].map(s => (
                     <div key={s.l} style={{ background: 'white', borderRadius: '12px', padding: '24px', border: '1px solid #e8edf2', textAlign: 'center' }}>
                       <div style={{ fontSize: '24px', marginBottom: '4px' }}>{s.e}</div>

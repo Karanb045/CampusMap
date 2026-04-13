@@ -98,7 +98,7 @@ const TABS = [
 ];
 
 const ROOM_TYPES    = ['classroom','lab','office','library','cafeteria','auditorium','other'];
-const BUILDING_CATS = ['academic','admin','hostel','sports','medical','amenity','other'];
+const BUILDING_CATS = ['academic','admin','hostel','sports','medical','amenity','cafeteria','other'];
 
 const EMPTY_BUILDING = {
   name:'', shortName:'', category:'academic', totalFloors:1,
