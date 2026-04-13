@@ -306,9 +306,9 @@ export default function CampusMap({
         zoom={17}
         zoomControl={false}
         minZoom={16}
-        maxZoom={20}
+        maxZoom={19}
         maxBounds={bounds}
-        maxBoundsViscosity={1.0}
+        maxBoundsViscosity={0.2}
         style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}
         whenCreated={(map) => { mapRef.current = map; setMapReady(true); }}
       >
@@ -317,6 +317,11 @@ export default function CampusMap({
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="&copy; OpenStreetMap"
+          maxNativeZoom={19}
+          maxZoom={19}
+          updateWhenIdle={false}
+          updateWhenZooming={true}
+          keepBuffer={4}
         />
 
         {/* Building polygons — GeoJSON for outlines, Firestore for data */}
