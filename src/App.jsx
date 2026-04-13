@@ -16,6 +16,7 @@ import OfflineBanner from './components/OfflineBanner.jsx';
 import DirectoryPage from './pages/DirectoryPage.jsx';
 import SearchBar from './components/SearchBar.jsx';
 import AuthScreen from './components/AuthScreen.jsx';
+import ditBuildings from './data/ditBuildings.json';
 import { buildSearchIndex, filterByCategory } from './services/searchService';
 import {
   subscribeToBuildings,
@@ -24,9 +25,8 @@ import {
   getRoomsForFloor
 } from './services/firestoreService.js';
 
-// CHANGED: ditBuildings.json is NO LONGER imported here.
-// It is only imported inside CampusMap.jsx for drawing polygon outlines.
-// All building DATA (name, description, photo, etc.) comes from Firestore.
+// Firestore remains the source of truth for editable data.
+// Static JSON is used here only as a temporary fallback while Firestore sync is loading.
 
 const AdminPage = lazy(() => import('./pages/AdminPage.jsx'));
 
@@ -121,6 +121,42 @@ export default function App() {
   const [searchIndex, setSearchIndex]           = useState([]);
 
   const { routePath, calculateRoute, clearRoute } = useRoute();
+
+  const staticBuildingsById = useMemo(() => {
+    const features = Array.isArray(ditBuildings?.features) ? ditBuildings.features : [];
+    const map = {};
+
+    for (const feature of features) {
+      const props = feature?.properties || {};
+      const id = props.id;
+      if (!id) continue;
+
+      const ring = feature?.geometry?.coordinates?.[0] || [];
+      const pts = ring.filter((p) => Array.isArray(p) && p.length >= 2);
+
+      let lat = null;
+      let lng = null;
+      if (pts.length) {
+        const sum = pts.reduce((acc, [x, y]) => ({ lng: acc.lng + x, lat: acc.lat + y }), { lat: 0, lng: 0 });
+        lat = sum.lat / pts.length;
+        lng = sum.lng / pts.length;
+      }
+
+      map[id] = {
+        id,
+        name: props.name || id,
+        shortName: props.shortName || '',
+        category: props.category || 'academic',
+        totalFloors: Number(props.totalFloors) || 1,
+        description: props.description || '',
+        groundLabel: props.groundLabel || 'G',
+        lat,
+        lng,
+      };
+    }
+
+    return map;
+  }, []);
 
   const filteredPois = useMemo(() => {
     try {
@@ -278,7 +314,10 @@ export default function App() {
   // CHANGED: handleBuildingClick only receives { id } from CampusMap.
   // It looks up the full building object from Firestore buildings array.
   function handleBuildingClick(props) {
-    const building = buildings.find(b => b.id === props?.id) ?? null;
+    const building =
+      buildings.find(b => b.id === props?.id) ??
+      staticBuildingsById[props?.id] ??
+      null;
     if (!building) {
       showToast('Building data not loaded yet. Try again.');
       return;

@@ -17,12 +17,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { signOut } from 'firebase/auth';
 import {
-  collection, deleteDoc, doc, limit,
-  onSnapshot, orderBy, query
+  collection, deleteDoc, doc, getDocs, limit,
+  onSnapshot, orderBy, query, serverTimestamp, setDoc
 } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
 import useAuth from '../hooks/useAuth';
 import FloorPlanPinTool from '../components/admin/FloorPlanPinTool';
+import ditBuildings from '../data/ditBuildings.json';
 import {
   addAdmin, addBuilding, addFloor, addRoom,
   getAdmins, getFloorsForBuilding, logAudit,
@@ -431,6 +432,7 @@ export default function AdminPage({ onBack }) {
 
   // ── Data ────────────────────────────────────────────────────────────────────
   const [buildings,    setBuildings]    = useState([]);
+  const [buildingsReady, setBuildingsReady] = useState(false);
   const [rooms,        setRooms]        = useState([]);
   const [admins,       setAdmins]       = useState([]);
   const [auditEntries, setAuditEntries] = useState([]);
@@ -480,12 +482,103 @@ export default function AdminPage({ onBack }) {
     setToastMsg(msg); setTimeout(()=>setToastMsg(''), 3200);
   }, []);
 
+  const staticBuildings = useMemo(() => {
+    const features = Array.isArray(ditBuildings?.features) ? ditBuildings.features : [];
+    return features
+      .map((feature) => {
+        const props = feature?.properties || {};
+        const id = props.id;
+        if (!id) return null;
+
+        const ring = feature?.geometry?.coordinates?.[0] || [];
+        const pts = ring.filter((p) => Array.isArray(p) && p.length >= 2);
+
+        let lat = null;
+        let lng = null;
+        if (pts.length) {
+          const sum = pts.reduce((acc, [x, y]) => ({ lng: acc.lng + x, lat: acc.lat + y }), { lat: 0, lng: 0 });
+          lat = sum.lat / pts.length;
+          lng = sum.lng / pts.length;
+        }
+
+        return {
+          id,
+          name: props.name || id,
+          shortName: props.shortName || String(props.name || id).slice(0, 2).toUpperCase(),
+          category: props.category || 'academic',
+          totalFloors: Number(props.totalFloors) || 1,
+          groundLabel: props.groundLabel || 'G',
+          description: props.description || '',
+          lat,
+          lng,
+          seededFrom: 'static-json',
+          isStaticFallback: true,
+        };
+      })
+      .filter(Boolean);
+  }, []);
+
+  const mergeWithStaticBuildings = useCallback((firestoreList = []) => {
+    const map = {};
+    for (const b of firestoreList) map[b.id] = b;
+    for (const b of staticBuildings) {
+      if (!map[b.id]) map[b.id] = b;
+    }
+    return Object.values(map);
+  }, [staticBuildings]);
+
   // ── Subscriptions ────────────────────────────────────────────────────────────
   useEffect(() => {
-    const u1 = subscribeToBuildings(setBuildings);
+    if (loading || !user) return;
+
+    const seedMissingStaticBuildings = async () => {
+      try {
+        const existingSnap = await getDocs(collection(db, 'buildings'));
+        const existingIds = new Set(existingSnap.docs.map((d) => d.id));
+        const features = Array.isArray(ditBuildings?.features) ? ditBuildings.features : [];
+
+        for (const feature of features) {
+          const id = feature?.properties?.id;
+          if (!id || existingIds.has(id)) continue;
+
+          const props = feature.properties || {};
+          const ring = feature?.geometry?.coordinates?.[0] || [];
+          const pts = ring.filter((p) => Array.isArray(p) && p.length >= 2);
+
+          let lat = null;
+          let lng = null;
+          if (pts.length) {
+            const sum = pts.reduce((acc, [x, y]) => ({ lng: acc.lng + x, lat: acc.lat + y }), { lat: 0, lng: 0 });
+            lat = sum.lat / pts.length;
+            lng = sum.lng / pts.length;
+          }
+
+          await setDoc(doc(db, 'buildings', id), {
+            name: props.name || id,
+            shortName: props.shortName || String(props.name || id).slice(0, 2).toUpperCase(),
+            category: props.category || 'academic',
+            totalFloors: Number(props.totalFloors) || 1,
+            groundLabel: props.groundLabel || 'G',
+            description: props.description || '',
+            lat,
+            lng,
+            createdAt: serverTimestamp(),
+            seededFrom: 'static-json',
+          });
+        }
+      } catch (e) {
+        console.error('Failed to seed static buildings into Firestore:', e);
+      }
+    };
+
+    seedMissingStaticBuildings();
+    const u1 = subscribeToBuildings((list) => {
+      setBuildings(mergeWithStaticBuildings(list));
+      setBuildingsReady(true);
+    });
     const u2 = subscribeToRooms(setRooms);
     return () => { u1(); u2(); };
-  }, []);
+  }, [loading, user, mergeWithStaticBuildings]);
 
   useEffect(() => {
     if (activeTab !== 'admins') return;
@@ -539,7 +632,20 @@ export default function AdminPage({ onBack }) {
     try {
       const photoUrl = bldgForm.photoBase64 || bldgForm.photoUrl || '';
       const data={ name:bldgForm.name.trim(), shortName:bldgForm.shortName.trim(), category:bldgForm.category, totalFloors:+bldgForm.totalFloors, description:bldgForm.description.trim(), lat:+bldgForm.lat, lng:+bldgForm.lng, photoUrl };
-      if(editBldg){ await updateBuilding(editBldg.id,data); await logAudit('update','building',editBldg.id); showToast('Building updated ✓'); }
+      if(editBldg){
+        if (editBldg.isStaticFallback) {
+          await setDoc(doc(db, 'buildings', editBldg.id), {
+            ...data,
+            groundLabel: editBldg.groundLabel || 'G',
+            seededFrom: 'static-json',
+            createdAt: serverTimestamp(),
+          }, { merge: true });
+        } else {
+          await updateBuilding(editBldg.id,data);
+        }
+        await logAudit('update','building',editBldg.id);
+        showToast('Building updated ✓');
+      }
       else{ const id=await addBuilding(data); await logAudit('create','building',id); showToast('Building added ✓'); }
       setBldgModal(false);
     } catch(e){ console.error(e); showToast('Error saving building'); }
@@ -859,9 +965,14 @@ export default function AdminPage({ onBack }) {
                       </div>
                     </div>
                   ))}
-                  {buildings.length===0 && (
+                  {!buildingsReady && (
                     <div style={{ gridColumn:'1/-1', textAlign:'center', padding:'32px', color:C.textDim }}>
                       <Spin size={24}/><div style={{ marginTop:'12px', fontSize:'13px' }}>Loading buildings…</div>
+                    </div>
+                  )}
+                  {buildingsReady && buildings.length===0 && (
+                    <div style={{ gridColumn:'1/-1', textAlign:'center', padding:'32px', color:C.textDim, fontSize:'13px' }}>
+                      No buildings found in Firestore. Open this page again while logged in as admin to auto-seed static buildings.
                     </div>
                   )}
                 </div>

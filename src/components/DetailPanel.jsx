@@ -87,8 +87,12 @@ export default function DetailPanel({
     : null;
   const currentFloorPlanUrl = floorObj?.planImageData || floorObj?.planImageUrl || floorObj?.floorPlanUrl || null;
 
-  const floorButtons = ['G', '1', '2', '3', '4'];
-  const floorValue = (label) => (label === 'G' ? 0 : Number(label));
+  const aboveGroundFloors = Math.max(0, Number(building?.totalFloors) || 0);
+  const groundLabel = String(building?.groundLabel || 'G');
+  const floorButtons = Array.from({ length: aboveGroundFloors + 1 }, (_, idx) =>
+    idx === 0 ? groundLabel : String(idx)
+  );
+  const floorValue = (label) => (label === groundLabel ? 0 : Number(label));
 
   return (
     <div className="h-full flex flex-col bg-white">
