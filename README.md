@@ -121,7 +121,7 @@ npm install
 cp .env.example .env
 # Edit .env with your Firebase config values
 
-# 4. Seed Firestore with all 6 campus buildings
+# 4. Seed Firestore with all campus buildings
 node scripts/seedFirestore.js
 
 # 5. Start the development server
@@ -177,27 +177,6 @@ Fields:
 ```
 
 Log in with that email — the **Admin tab** appears automatically.
-
----
-
-## 🌱 Seeding the Database
-
-```bash
-node scripts/seedFirestore.js
-```
-
-Populates Firestore `/buildings` with all 6 campus buildings:
-
-| ID | Name | Category | Floors |
-|---|---|---|---|
-| `vedanta` | Vedanta Block | Admin | G + 5 |
-| `chanakya` | Chanakya Block | Academic | G + 4 |
-| `civil` | Civil Block | Academic | G + 4 |
-| `vivekananda` | Vivekananda Block | Academic | G + 5 |
-| `boys_hostel` | Boys Hostel | Hostel | G + 5 |
-| `girls_hostel` | Girls Hostel | Hostel | G + 5 |
-
-> Safe to re-run — existing documents are overwritten with the same data.
 
 ---
 
