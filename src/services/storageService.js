@@ -12,7 +12,6 @@ export async function uploadFloorPlan(buildingId, floorNumber, file) {
   try {
     const base64Data = await fileToBase64(file);
     
-    // Return a mock URL that indicates it's base64 stored data
     const mockUrl = `base64:${buildingId}_${floorNumber}_${file.name}`;
     
     return {

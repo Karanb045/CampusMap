@@ -1,7 +1,3 @@
-// Image strategy: compress → base64 → stored directly in Firestore field.
-// No Firebase Storage, no external services, works on free Spark plan.
-// Max compressed size ≈ 200KB base64 (well under 1MB Firestore doc limit).
-
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { signOut } from 'firebase/auth';
 import {

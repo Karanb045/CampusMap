@@ -5,7 +5,6 @@ import useRoute from './hooks/useRoute';
 import CampusMap from './components/CampusMap.jsx';
 import DetailPanel from './components/DetailPanel.jsx';
 import DirectionsStepper from './components/DirectionsStepper.jsx';
-import FloorPlanViewer from './components/FloorPlanViewer.jsx';
 import IndoorPathView from './components/IndoorPathView.jsx';
 import OfflineBanner from './components/OfflineBanner.jsx';
 import DirectoryPage from './pages/DirectoryPage.jsx';

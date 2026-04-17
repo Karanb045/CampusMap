@@ -1,8 +1,4 @@
 // src/hooks/useRoute.js
-// Dijkstra routing using campusGraph.js
-// Building IDs in campusGraph match Firestore IDs exactly — no mapping needed.
-// Returns routePath [[lat,lng],...] ready for Leaflet Polyline.
-
 import { useState, useCallback } from 'react';
 import campusGraph from '../data/campusGraph.js';
 

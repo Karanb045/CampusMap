@@ -1,5 +1,3 @@
-// src/components/CampusMap.jsx
-
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { CircleMarker, GeoJSON, MapContainer, Marker, Polyline, TileLayer, ZoomControl } from 'react-leaflet';
 import L from 'leaflet';
@@ -191,14 +189,25 @@ export default function CampusMap({
     fillOpacity: 0.35,
   }), []);
 
-  // Per-feature style using feature's own category
-  const buildingStyleFn = useMemo(() => (feature) => ({
-    color:       '#ffffff',
-    weight:      2,
-    opacity:     1,
-    fillColor:   getCategoryColor(feature?.properties?.category),
-    fillOpacity: 0.4,
-  }), []);
+  const buildingById = useMemo(
+    () => new Map((buildings ?? []).map((b) => [b?.id, b])),
+    [buildings]
+  );
+
+  // Per-feature style using live category first, static GeoJSON as fallback.
+  const buildingStyleFn = useMemo(() => (feature) => {
+    const id = feature?.properties?.id;
+    const liveCategory = id ? buildingById.get(id)?.category : null;
+    const category = liveCategory || feature?.properties?.category;
+
+    return {
+      color:       '#ffffff',
+      weight:      2,
+      opacity:     1,
+      fillColor:   getCategoryColor(category),
+      fillOpacity: 0.4,
+    };
+  }, [buildingById]);
 
   // Per-feature event handlers + labels
   // CHANGED: onBuildingClick now passes only { id } — App.jsx looks up Firestore data
@@ -275,6 +284,17 @@ export default function CampusMap({
   const safeRoutePath = Array.isArray(routePath) ? routePath : [];
   const filteredGeoJson = useMemo(() => {
     const features = Array.isArray(ditBuildings?.features) ? ditBuildings.features : [];
+    const visibleIds = new Set((pois ?? []).map((p) => p?.id).filter(Boolean));
+
+    // Keep polygon visibility aligned with the same building set used by chips/list.
+    if (visibleIds.size > 0) {
+      return {
+        ...ditBuildings,
+        features: features.filter((f) => visibleIds.has(f?.properties?.id)),
+      };
+    }
+
+    // Fallback while data is still loading.
     const key = String(activeFilter || 'all').toLowerCase();
     if (key === 'all') return ditBuildings;
 
@@ -284,7 +304,7 @@ export default function CampusMap({
     }
 
     return { ...ditBuildings, features: selected };
-  }, [activeFilter]);
+  }, [activeFilter, pois]);
 
   return (
     <div
