@@ -10,6 +10,7 @@ import FloorPlanPinTool from '../components/admin/FloorPlanPinTool';
 import ditBuildings from '../data/ditBuildings.json';
 import {
   addAdmin, addBuilding, addFloor, addRoom,
+  deleteFloor,
   getAdmins, getFloorsForBuilding, logAudit,
   removeAdmin, subscribeToBuildings, subscribeToRooms,
   updateBuilding, updateFloor, updateRoom
@@ -437,6 +438,7 @@ export default function AdminPage({ onBack }) {
   const [floorForm,  setFloorForm]  = useState({...EMPTY_FLOOR});
   const [editFloor,  setEditFloor]  = useState(null);
   const [floorErrs,  setFloorErrs]  = useState({});
+  const [delFloor,   setDelFloor]   = useState(null);
 
   // ── Pin tool ────────────────────────────────────────────────────────────────
   const [pinTool, setPinTool] = useState({ open:false, floor:null, floorId:null });
@@ -728,6 +730,33 @@ export default function AdminPage({ onBack }) {
       showToast('Error saving floor');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const confirmDelFloor = async () => {
+    const fl = delFloor;
+    if (!fl || !floorBldg) return;
+    setSaving(true);
+    try {
+      const result = await deleteFloor(fl.id);
+      await logAudit('delete', 'floor', fl.id);
+      await loadFloors(floorBldg.id);
+      showToast(result.deletedRooms > 0
+        ? `Floor deleted ✓ (${result.deletedRooms} rooms removed)`
+        : 'Floor deleted ✓');
+      if (editFloor?.id === fl.id) {
+        setEditFloor(null);
+        const nextNum = (floorsByBldg[floorBldg.id] ?? []).filter((f) => f.id !== fl.id).length > 0
+          ? Math.max(...(floorsByBldg[floorBldg.id] ?? []).filter((f) => f.id !== fl.id).map((f) => f.floorNumber ?? 0)) + 1
+          : 0;
+        setFloorForm({ ...EMPTY_FLOOR, floorNumber: nextNum, label: nextNum === 0 ? 'Ground Floor' : `Floor ${nextNum}` });
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('Error deleting floor');
+    } finally {
+      setSaving(false);
+      setDelFloor(null);
     }
   };
 
@@ -1236,6 +1265,7 @@ export default function AdminPage({ onBack }) {
                         </div>
                         <div style={{ display:'flex', gap:'5px' }}>
                           <Btn size="sm" variant="ghost" onClick={()=>startEditFloor(fl)}>Edit</Btn>
+                          <Btn size="sm" variant="danger" onClick={()=>setDelFloor(fl)}>Delete</Btn>
                           {/* FIX 3: re-fetch fresh floor so planImageUrl is current */}
                           <Btn size="sm" variant="outline" onClick={async () => {
                             const freshFloors = await loadFloors(floorBldg.id);
@@ -1375,6 +1405,7 @@ export default function AdminPage({ onBack }) {
 
       {/* ── Confirm dialogs ───────────────────────────────────────────────── */}
       <Confirm open={!!delBldg}  message={`Delete "${delBldg?.name}"? This cannot be undone.`}                             onConfirm={confirmDelBldg}  onCancel={()=>setDelBldg(null)}  />
+      <Confirm open={!!delFloor} message={`Delete floor "${delFloor?.label}"? This will also remove rooms on that floor.`} onConfirm={confirmDelFloor} onCancel={()=>setDelFloor(null)} />
       <Confirm open={!!delRoom}  message={`Delete room "${delRoom?.roomNumber||delRoom?.name}"? This cannot be undone.`}    onConfirm={confirmDelRoom}  onCancel={()=>setDelRoom(null)}  />
       <Confirm open={!!delAdmin} message={`Remove admin access for "${delAdmin?.email}"?`}                                  onConfirm={confirmDelAdmin} onCancel={()=>setDelAdmin(null)} />
 

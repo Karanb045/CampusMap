@@ -69,6 +69,13 @@ export async function updateFloor(id, updates) {
   });
 }
 
+export async function deleteFloor(id) {
+  const roomsSnap = await getDocs(query(roomsCol, where('floorId', '==', id)));
+  await Promise.all(roomsSnap.docs.map((roomDoc) => deleteDoc(roomDoc.ref)));
+  await deleteDoc(doc(db, 'floors', id));
+  return { deletedRooms: roomsSnap.size };
+}
+
 // ─── Buildings ────────────────────────────────────────────────────────────────
 
 export async function addBuilding(data) {
